@@ -1,0 +1,39 @@
+name: opencode-triage
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  triage:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+      issues: write
+      pull-requests: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Run opencode
+        uses: anomalyco/opencode/github@latest
+        env:
+          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+        with:
+          model: opencode/deepseek-v4.1-flash
+          prompt: |
+            Это новая задача в трекере. Разбери её и оставь в issue один
+            комментарий на русском языке со следующим:
+
+            1. Причина — что именно в поведении приложения приводит к проблеме.
+            2. Затронутые части кода — конкретные файлы и функции.
+            3. Предлагаемый путь исправления — без готового патча, только направление.
+            4. Постановка — что считается исправлением: наблюдаемое поведение,
+               которое должно получиться, и как это проверить.
+
+            Если данных в задаче не хватает, перечисли, что нужно уточнить.
+            Не вноси правки в код и не открывай pull request — только разбор.
+            Если получится, добавь к issue метку needs-triage.
