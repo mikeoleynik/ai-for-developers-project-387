@@ -1,0 +1,14 @@
+node_modules
+**/node_modules
+dist
+**/dist
+.git
+.github
+.pnpm-store
+apps/api/data
+apps/e2e/test-results
+apps/e2e/playwright-report
+*.log
+real.md
+docker.md
+please.log

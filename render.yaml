@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: call-calendar
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    healthCheckPath: /ping
+    envVars:
+      - key: SERVE_WEB
+        value: "true"
+      - key: API_PREFIX
+        value: api
+      - key: CALENDAR_TIMEZONE
+        value: Europe/Moscow

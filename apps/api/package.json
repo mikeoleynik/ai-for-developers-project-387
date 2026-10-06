@@ -1,0 +1,31 @@
+{
+  "name": "api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "start": "node dist/index.js",
+    "dev": "tsx watch src/index.ts",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "generate": "tsp compile tsp/main.tsp --emit @typespec/openapi3 --output-dir generated --option @typespec/openapi3.output-file=openapi.yaml && cp generated/@typespec/openapi3/openapi.yaml generated/openapi.yaml"
+  },
+  "dependencies": {
+    "@fastify/static": "^9.3.0",
+    "better-sqlite3": "^13.0.3",
+    "fastify": "^5.12.5",
+    "fastify-openapi-glue": "^4.11.5"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^9.6.0",
+    "@types/node": "^26.6.2",
+    "@typespec/compiler": "^1.16.0",
+    "@typespec/http": "^1.16.0",
+    "@typespec/openapi3": "^1.16.0",
+    "fastify-tsconfig": "^3.0.0",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.1"
+  }
+}
