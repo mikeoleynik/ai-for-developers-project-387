@@ -8,13 +8,20 @@ on:
 
 jobs:
   opencode:
+    # Отсекаем комментарии ботов (включая ответы самого агента) и ограничиваем
+    # круг вызывающих участниками проекта. Команда вызова сужена до /oc.
     if: |
-      contains(github.event.comment.body, ' /oc') ||
-      startsWith(github.event.comment.body, '/oc') ||
-      contains(github.event.comment.body, ' /opencode') ||
-      startsWith(github.event.comment.body, '/opencode')
+      github.event.comment.user.type != 'Bot' &&
+      !endsWith(github.actor, '[bot]') &&
+      (github.event.comment.author_association == 'OWNER' ||
+       github.event.comment.author_association == 'MEMBER' ||
+       github.event.comment.author_association == 'COLLABORATOR') &&
+      (contains(github.event.comment.body, ' /oc') ||
+       startsWith(github.event.comment.body, '/oc'))
     runs-on: ubuntu-latest
     permissions:
+      # id-token нужен для OIDC-обмена на токен GitHub App; запись выполняет
+      # приложение, поэтому раннеру хватает чтения.
       id-token: write
       contents: read
       pull-requests: read
@@ -31,3 +38,5 @@ jobs:
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }} # имя секрета зависит от провайдера в model
         with:
           model: opencode/deepseek-v4.1-flash
+          mentions: '/oc'
+          share: false

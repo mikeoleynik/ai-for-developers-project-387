@@ -6,11 +6,21 @@ on:
 
 jobs:
   triage:
+    # Автотриаж только для задач от участников проекта; события от ботов
+    # (например, отчёт Lighthouse от github-actions[bot]) отсекаются.
+    if: |
+      github.event.issue.user.type != 'Bot' &&
+      !endsWith(github.actor, '[bot]') &&
+      (github.event.issue.author_association == 'OWNER' ||
+       github.event.issue.author_association == 'MEMBER' ||
+       github.event.issue.author_association == 'COLLABORATOR')
     runs-on: ubuntu-latest
     permissions:
+      # Разбор и метка публикуются токеном GitHub App (OIDC), поэтому записи
+      # раннеру не нужно.
       id-token: write
       contents: read
-      issues: write
+      issues: read
       pull-requests: read
     steps:
       - name: Checkout repository
@@ -24,6 +34,7 @@ jobs:
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
         with:
           model: opencode/deepseek-v4.1-flash
+          share: false
           prompt: |
             Это новая задача в трекере. Разбери её и оставь в issue один
             комментарий на русском языке со следующим:
