@@ -1,0 +1,80 @@
+name: opencode-scheduled
+
+on:
+  # Каждую ночь в 03:00 по Москве. timezone у schedule поддерживает IANA-строки.
+  schedule:
+    - cron: '0 3 * * *'
+      timezone: 'Europe/Moscow'
+  # Ручной запуск из вкладки Actions, чтобы не ждать ночи.
+  workflow_dispatch:
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: write
+      pull-requests: write
+      issues: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      # Публичный адрес приложения хранится в переменной репозитория APP_URL,
+      # чтобы не быть вписанным в воркфлоу.
+      - name: Warm up the app
+        run: |
+          curl -sS -o /dev/null --max-time 120 --retry 3 --retry-delay 5 \
+            "${{ vars.APP_URL }}"
+
+      - name: Run Lighthouse
+        run: |
+          npx --yes lighthouse@12 "${{ vars.APP_URL }}" \
+            --output=json \
+            --output-path=./lighthouse-report.json \
+            --only-categories=performance,accessibility,best-practices,seo \
+            --chrome-flags="--headless --no-sandbox --disable-dev-shm-usage" \
+            --max-wait-for-load=90000 \
+            --quiet || echo "lighthouse exited non-zero"
+
+      - name: Ensure report exists
+        run: |
+          test -s lighthouse-report.json \
+            || echo '{"error":"lighthouse did not produce a report"}' > lighthouse-report.json
+
+      - name: Upload report
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-report
+          path: lighthouse-report.json
+          if-no-files-found: error
+
+      - name: Run opencode
+        uses: anomalyco/opencode/github@latest
+        env:
+          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+          # Токен раннера нужен агенту, чтобы создать issue через gh.
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          model: opencode/deepseek-v4.1-flash
+          prompt: |
+            Ты запущен по расписанию для регулярной проверки публичной страницы
+            приложения. В рабочем каталоге лежит отчёт Lighthouse —
+            `lighthouse-report.json` (адрес проверки: ${{ vars.APP_URL }}).
+
+            Сделай следующее:
+            1. Прочитай отчёт и выдели главное: оценки по категориям performance,
+               accessibility, best-practices, seo и самые значимые проблемные
+               аудиты с конкретными метриками (LCP, CLS, TBT и т.п.).
+            2. Сформулируй короткие выводы и предложения, что стоит поправить.
+            3. Создай ОДИН GitHub issue с итогами через `gh issue create`:
+               - заголовок на русском с датой проверки;
+               - в теле — адрес проверки, оценки по категориям, список находок
+                 и рекомендации;
+               - добавь метку `needs-triage`.
+            4. Код не меняй и pull request не открывай.
+
+            Если отчёт пуст или содержит ошибку, создай issue с пометкой, что
+            проверка не удалась, и укажи причину.

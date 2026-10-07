@@ -6,3 +6,4 @@ apps/api/generated/@typespec/
 apps/api/data/
 apps/e2e/test-results/
 apps/e2e/playwright-report/
+lighthouse-report.json
