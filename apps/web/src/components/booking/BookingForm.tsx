@@ -1,19 +1,24 @@
 import { useState, type FormEvent } from 'react'
 
 import { Button } from '@/components/ui/button'
-import { bookingsCreate, type Booking } from '@/lib/api'
+import { bookingsCreate, type Booking, type ErrorBody } from '@/lib/api'
 import { apiErrorMessage } from '@/lib/errors'
-import { formatSlot } from '@/lib/format'
 
 type Props = {
   eventTypeId: string
   start: string
+  onBooked: (booking: Booking) => void
+  onConflict: () => void
 }
 
-export function BookingForm({ eventTypeId, start }: Props) {
+export function BookingForm({
+  eventTypeId,
+  start,
+  onBooked,
+  onConflict,
+}: Props) {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [booking, setBooking] = useState<Booking | null>(null)
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -35,21 +40,13 @@ export function BookingForm({ eventTypeId, start }: Props) {
 
     if (requestError || !created) {
       setError(apiErrorMessage(requestError))
+      if ((requestError as ErrorBody | undefined)?.error?.code === 'conflict') {
+        onConflict()
+      }
       return
     }
 
-    setBooking(created)
-  }
-
-  if (booking) {
-    return (
-      <section role="status" className="mt-8 rounded-2xl border bg-card p-6">
-        <h2 className="text-2xl font-semibold">Вы записаны</h2>
-        <p className="mt-2 text-muted-foreground">
-          {formatSlot(booking.start)}
-        </p>
-      </section>
-    )
+    onBooked(created)
   }
 
   return (
