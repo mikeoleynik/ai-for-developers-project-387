@@ -1,0 +1,39 @@
+name: opencode-review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+      pull-requests: write
+      issues: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Run opencode
+        uses: anomalyco/opencode/github@latest
+        env:
+          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          model: opencode/deepseek-v4.1-flash
+          use_github_token: true
+          prompt: |
+            Проведи ревью этого pull request по критериям:
+
+            1. Соответствие постановке из связанного issue: решает ли diff задачу целиком.
+            2. Потенциальные баги и граничные случаи в изменённых файлах.
+            3. Типы и обработка ошибок; не глотаются ли ошибки.
+            4. Сообщения коммитов по Conventional Commits (см. AGENTS.md).
+            5. Есть ли осмысленные тесты на изменение.
+
+            Оставь замечания списком с указанием файлов и строк. Если всё
+            в порядке — так и напиши. Код не меняй и pull request не мержи.
