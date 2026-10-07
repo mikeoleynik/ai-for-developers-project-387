@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 
 import { BookingForm } from '@/components/booking/BookingForm'
@@ -6,6 +6,7 @@ import { buttonVariants } from '@/components/ui/button'
 import {
   availabilityList,
   eventTypesList,
+  type Booking,
   type DayAvailability,
   type EventType,
 } from '@/lib/api'
@@ -13,6 +14,7 @@ import { apiErrorMessage } from '@/lib/errors'
 import {
   addDaysToDate,
   formatDay,
+  formatSlot,
   formatTime,
   todayInCalendarZone,
 } from '@/lib/format'
@@ -29,6 +31,8 @@ type AvailabilityState =
   | { status: 'error'; message: string }
   | { status: 'ready'; days: DayAvailability[] }
 
+const AVAILABILITY_REFRESH_INTERVAL_MS = 30_000
+
 export function BookingPage() {
   const { eventTypeId = '' } = useParams()
   const [state, setState] = useState<State>({ status: 'loading' })
@@ -36,6 +40,8 @@ export function BookingPage() {
     status: 'loading',
   })
   const [start, setStart] = useState<string | null>(null)
+  const [booking, setBooking] = useState<Booking | null>(null)
+  const [refreshToken, setRefreshToken] = useState(0)
 
   useEffect(() => {
     let active = true
@@ -96,7 +102,41 @@ export function BookingPage() {
     return () => {
       active = false
     }
-  }, [state])
+  }, [state, refreshToken])
+
+  const refreshAvailability = useCallback(() => {
+    setRefreshToken((token) => token + 1)
+  }, [])
+
+  useEffect(() => {
+    if (state.status !== 'ready') return
+
+    const intervalId = window.setInterval(
+      refreshAvailability,
+      AVAILABILITY_REFRESH_INTERVAL_MS,
+    )
+    window.addEventListener('focus', refreshAvailability)
+
+    return () => {
+      window.clearInterval(intervalId)
+      window.removeEventListener('focus', refreshAvailability)
+    }
+  }, [state, refreshAvailability])
+
+  function handleSelect(slot: string) {
+    setBooking(null)
+    setStart(slot)
+  }
+
+  function handleBooked(created: Booking) {
+    setBooking(created)
+    setStart(null)
+    refreshAvailability()
+  }
+
+  function handleConflict() {
+    refreshAvailability()
+  }
 
   return (
     <main className="mx-auto max-w-3xl px-6 py-16">
@@ -165,7 +205,7 @@ export function BookingPage() {
                           <button
                             type="button"
                             aria-pressed={start === slot}
-                            onClick={() => setStart(slot)}
+                            onClick={() => handleSelect(slot)}
                             className={cn(
                               buttonVariants({
                                 variant:
@@ -185,8 +225,25 @@ export function BookingPage() {
             </div>
           )}
 
-          {start && (
-            <BookingForm eventTypeId={state.eventType.id} start={start} />
+          {booking && (
+            <section
+              role="status"
+              className="mt-8 rounded-2xl border bg-card p-6"
+            >
+              <h2 className="text-2xl font-semibold">Вы записаны</h2>
+              <p className="mt-2 text-muted-foreground">
+                {formatSlot(booking.start)}
+              </p>
+            </section>
+          )}
+
+          {!booking && start && (
+            <BookingForm
+              eventTypeId={state.eventType.id}
+              start={start}
+              onBooked={handleBooked}
+              onConflict={handleConflict}
+            />
           )}
         </>
       )}
