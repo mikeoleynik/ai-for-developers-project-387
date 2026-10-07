@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.1](https://github.com/mikeoleynik/ai-for-developers-project-387/compare/call-calendar-v1.3.0...call-calendar-v1.3.1) (2026-10-07)
+
+
+### Bug Fixes
+
+* refresh slots live after booking ([#2](https://github.com/mikeoleynik/ai-for-developers-project-387/issues/2)) ([5a383c1](https://github.com/mikeoleynik/ai-for-developers-project-387/commit/5a383c11566f75ad634b079ed83adfdb5ed25a66))
+
 ## [1.3.0](https://github.com/mikeoleynik/ai-for-developers-project-386/compare/call-calendar-v1.2.0...call-calendar-v1.3.0) (2026-10-01)
 
 
