@@ -1,8 +1,8 @@
 import { useState, type FormEvent } from 'react'
 
 import { Button } from '@/components/ui/button'
-import { bookingsCreate, type Booking, type ErrorBody } from '@/lib/api'
-import { apiErrorMessage } from '@/lib/errors'
+import { bookingsCreate, type Booking } from '@/lib/api'
+import { apiErrorMessage, isConflict } from '@/lib/errors'
 
 type Props = {
   eventTypeId: string
@@ -40,7 +40,7 @@ export function BookingForm({
 
     if (requestError || !created) {
       setError(apiErrorMessage(requestError))
-      if ((requestError as ErrorBody | undefined)?.error?.code === 'conflict') {
+      if (isConflict(requestError)) {
         onConflict()
       }
       return

@@ -1,19 +1,28 @@
 import type { ErrorBody } from '@/lib/api'
 
+const CONFLICT_CODE = 'conflict'
+
 const MESSAGES_BY_CODE: Record<string, string> = {
-  conflict: 'Это время уже занято. Выберите, пожалуйста, другое время.',
+  [CONFLICT_CODE]: 'Это время уже занято. Выберите, пожалуйста, другое время.',
+}
+
+function errorCode(error: unknown): string | undefined {
+  return (error as ErrorBody | undefined)?.error?.code
+}
+
+export function isConflict(error: unknown): boolean {
+  return errorCode(error) === CONFLICT_CODE
 }
 
 export function apiErrorMessage(error: unknown): string {
-  const body = error as ErrorBody | undefined
-  const code = body?.error?.code
+  const code = errorCode(error)
 
   if (code && MESSAGES_BY_CODE[code]) {
     return MESSAGES_BY_CODE[code]
   }
 
   return (
-    body?.error?.message ??
+    (error as ErrorBody | undefined)?.error?.message ??
     'Не удалось выполнить запрос. Попробуйте ещё раз.'
   )
 }
