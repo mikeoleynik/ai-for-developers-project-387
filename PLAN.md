@@ -4,6 +4,16 @@
 как жалобы пользователя и не содержат готового решения. По мере готовности
 каждый пункт превращается в отдельный GitHub Issue.
 
+## Задачи в трекере
+
+| Задача | Issue | Статус |
+| --- | --- | --- |
+| Гость может отменить свою запись | не заведён | — |
+| Владелец может редактировать и удалять виды встреч | не заведён | — |
+| Занятый слот остаётся в списке свободных | [#2](https://github.com/mikeoleynik/ai-for-developers-project-387/issues/2) | в работе, PR [#5](https://github.com/mikeoleynik/ai-for-developers-project-387/pull/5) ещё не смержен |
+| Календарь предлагает записаться на выходные | [#3](https://github.com/mikeoleynik/ai-for-developers-project-387/issues/3) | needs-triage |
+| В списке встреч пропадают прошедшие звонки | [#4](https://github.com/mikeoleynik/ai-for-developers-project-387/issues/4) | needs-triage |
+
 ## Фичи
 
 ### 1. Гость может отменить свою запись
